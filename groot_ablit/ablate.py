@@ -14,7 +14,7 @@ import torch
 def orthogonalize(weight: torch.Tensor, direction: torch.Tensor, strength: float = 1.0,
                   preserve_norm: bool = True, passes: int = 1) -> torch.Tensor:
     original = weight.detach().to(torch.float32)
-    direction = direction.detach().to(torch.float32).flatten()
+    direction = direction.detach().to(device=weight.device, dtype=torch.float32).flatten()
     if weight.dim() == 3:
         return torch.stack(
             [orthogonalize(original[index], direction, strength, preserve_norm, passes) for index in range(original.shape[0])]
@@ -65,6 +65,15 @@ def apply(model, directions: torch.Tensor, strengths: dict[str, float], layers: 
         log(f"ablated layer {index}")
 
 
-def save(model, tokenizer, out_dir: str, max_shard_size: str = "5GB") -> None:
+def save(model, tokenizer, out_dir: str, max_shard_size: str = "5GB", source: str | None = None) -> None:
+    import shutil
+    from pathlib import Path
+
     model.save_pretrained(out_dir, max_shard_size=max_shard_size)
     tokenizer.save_pretrained(out_dir)
+    if source:
+        for name in ("preprocessor_config.json", "processor_config.json",
+                     "video_preprocessor_config.json", "configuration.json"):
+            candidate = Path(source) / name
+            if candidate.exists():
+                shutil.copy(candidate, Path(out_dir) / name)

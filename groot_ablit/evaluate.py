@@ -70,7 +70,7 @@ def evaluate(responses: list[str], prompts: list[str], base_url: str, model: str
             "prompt": prompt,
             "response": response,
             "string_refusal": string_refusal(response),
-            "judge": judge_module.score(prompt, response, base_url, model, api_key),
+            "judge": judge_module.score(prompt, answer_only(response), base_url, model, api_key),
         }
 
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
@@ -79,3 +79,35 @@ def evaluate(responses: list[str], prompts: list[str], base_url: str, model: str
     summary = judge_module.summarise(rows)
     summary["string_refusal_rate"] = round(sum(row["string_refusal"] for row in rows) / max(1, len(rows)), 3)
     return {"summary": summary, "rows": rows}
+
+
+def generate_endpoint(prompts: list[str], base_url: str, model: str, max_new_tokens: int = 2048,
+                      concurrency: int = 8, api_key: str | None = None) -> list[str]:
+    from concurrent.futures import ThreadPoolExecutor
+    import urllib.request
+
+    def one(prompt: str) -> str:
+        body = json.dumps({
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": max_new_tokens,
+            "temperature": 0,
+        }).encode()
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        request = urllib.request.Request(f"{base_url.rstrip('/')}/chat/completions", data=body, headers=headers)
+        with urllib.request.urlopen(request, timeout=1800) as response:
+            payload = json.loads(response.read())
+        message = payload["choices"][0]["message"]
+        return (message.get("content") or "") + (message.get("reasoning_content") or "")
+
+    with ThreadPoolExecutor(max_workers=concurrency) as pool:
+        return list(pool.map(one, prompts))
+
+
+def answer_only(response: str) -> str:
+    marker = response.rfind("</think>")
+    if marker != -1:
+        return response[marker + len("</think>"):].strip()
+    return response.strip()

@@ -1,0 +1,28 @@
+model = "/mnt/nvme8tb/hf-ablate/groot-bf16"
+n_trials = 200
+n_startup_trials = 60
+seed = 0
+row_normalization = "full"
+full_normalization_lora_rank = 8
+kl_divergence_target = 0.1
+kl_divergence_scale = 1.0
+max_response_length = 512
+batch_size = 8
+print_responses = true
+plot_residuals = true
+residual_plot_path = "work/residuals.png"
+study_checkpoint_dir = "work/study"
+export_strategy = "merge"
+offload_outputs_to_cpu = false
+
+[good_prompts]
+dataset = "work/prompts/harmless_train.txt"
+
+[bad_prompts]
+dataset = "work/prompts/harmful_train.txt"
+
+[good_evaluation_prompts]
+dataset = "work/prompts/harmless_eval.txt"
+
+[bad_evaluation_prompts]
+dataset = "work/prompts/harmful_eval.txt"

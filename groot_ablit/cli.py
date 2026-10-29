@@ -9,7 +9,7 @@ from pathlib import Path
 
 import torch
 
-from . import ablate, directions, evaluate, prompts as prompts_module
+from . import ablate, directions, evaluate, judge as judge_module, prompts as prompts_module
 from transformers import AutoTokenizer
 
 
@@ -54,8 +54,19 @@ def cmd_ablate(args) -> None:
 def cmd_eval(args) -> None:
     prompt_file = json.loads(Path(args.prompts).read_text())
     items = prompt_file[args.split][args.kind]
-    model, tokenizer = evaluate.load_local(args.model)
-    responses = evaluate.generate_local(model, tokenizer, items, max_new_tokens=args.max_new_tokens)
+    if args.endpoint:
+        responses = evaluate.generate_endpoint(items, args.endpoint, args.served_model or args.model,
+                                               max_new_tokens=args.max_new_tokens)
+    else:
+        model, tokenizer = evaluate.load_local(args.model)
+        responses = evaluate.generate_local(model, tokenizer, items, max_new_tokens=args.max_new_tokens)
+    if args.skip_judge:
+        report = {"rows": [{"prompt": prompt, "response": response} for prompt, response in zip(items, responses)]}
+        path = Path(args.out)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(report, indent=1))
+        print(f"generated {len(responses)} responses -> {path}")
+        return
     report = evaluate.evaluate(
         responses, items, args.judge_url, args.judge_model, os.environ.get("JUDGE_API_KEY")
     )
@@ -71,10 +82,10 @@ def cmd_score(args) -> None:
     report = json.loads(Path(args.report).read_text())
     rows = []
     for row in report["rows"]:
-        verdict = evaluate.judge.score(row["prompt"], row["response"], args.judge_url, args.judge_model,
+        verdict = judge_module.score(row["prompt"], evaluate.answer_only(row["response"]), args.judge_url, args.judge_model,
                                        os.environ.get("JUDGE_API_KEY"))
         rows.append({**row, "judge": verdict})
-    summary = evaluate.judge.summarise(rows)
+    summary = judge_module.summarise(rows)
     summary["string_refusal_rate"] = round(
         sum(evaluate.string_refusal(row["response"]) for row in rows) / max(1, len(rows)), 3
     )
@@ -120,6 +131,9 @@ def main() -> None:
     eval_parser.add_argument("--kind", default="harmful")
     eval_parser.add_argument("--out", required=True)
     eval_parser.add_argument("--max-new-tokens", type=int, default=512)
+    eval_parser.add_argument("--skip-judge", action="store_true")
+    eval_parser.add_argument("--endpoint", default=os.environ.get("EVAL_ENDPOINT"))
+    eval_parser.add_argument("--served-model", default=os.environ.get("EVAL_SERVED_MODEL"))
     eval_parser.add_argument("--judge-url", default=os.environ.get("JUDGE_URL", "http://127.0.0.1:8081/v1"))
     eval_parser.add_argument("--judge-model", default=os.environ.get("JUDGE_MODEL", "nemotron-3.5-super-vl-120b-nvfp4"))
     eval_parser.set_defaults(func=cmd_eval)
