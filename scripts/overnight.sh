@@ -116,6 +116,9 @@ PY
   if [ -f "$FINAL/config.json" ]; then
     measure "$FINAL" final-nvfp4 harmful reports/final_harmful.json
     measure "$FINAL" final-nvfp4x xstest_safe reports/final_xstest.json
+    ./scripts/free_gpu.sh
+    "$VENV/bin/python" scripts/crossjudge.py reports/final_harmful.json nemotron-3.5-super-vl-120b-nvfp4 \
+      >> "$LOG" 2>&1 || true
   fi
 
   ./scripts/free_gpu.sh

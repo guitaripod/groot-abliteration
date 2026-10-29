@@ -112,6 +112,14 @@ def main() -> None:
         "rows": rows,
         "quality": quality_rows,
     }
+    agreement = quality("work/judge-agreement.json")
+    if agreement:
+        context["repo_line"] = (
+            f"Second judge cross-check on {agreement['n']} of the final prompts: "
+            f"{agreement['agreement']:.0%} verdict agreement, "
+            f"refusal rate {agreement['refusal_rate_second_judge']:.1%} vs "
+            f"{agreement['refusal_rate_first_judge']:.1%}. " + context["repo_line"]
+        )
     text = card_module.build(context)
     url = card_module.publish(str(final_dir), REPO_ID, text)
     print(f"published: {url}")
