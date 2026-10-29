@@ -53,6 +53,12 @@ measure() {
   echo "-- measuring $served ($kind)"
   ./scripts/free_gpu.sh
   KIND="$kind" MAX_NEW=1536 ./scripts/eval_candidate.sh "$dir" "$served" "$report"
+  if [ ! -f "$report" ]; then
+    echo "-- retry $served ($kind) after a server failure"
+    ./scripts/free_gpu.sh
+    docker rm -f vllm-cand >/dev/null 2>&1 || true
+    KIND="$kind" MAX_NEW=1536 ./scripts/eval_candidate.sh "$dir" "$served" "$report"
+  fi
   note "measure-$served-$kind" "$([ -f "$report" ] && echo ok || echo failed)"
   ./scripts/free_gpu.sh
   "$VENV/bin/python" -m groot_ablit.cli score --report "$report" \
@@ -71,6 +77,8 @@ build_variant t57-e06 "$ABL/candidates/heretic-t57" 0.6 0.6
 build_variant t57-e10 "$ABL/candidates/heretic-t57" 1.0 1.0
 build_variant parent-e10 "$ABL/groot-bf16" 1.0 1.0
 
+measure "$ABL/groot-bf16" parent harmful reports/overnight_parent_harmful.json
+measure "$ABL/candidates/heretic-t57" t57 harmful reports/overnight_t57_harmful.json
 measure "$ABL/candidates/t57-e06" t57e06 harmful reports/overnight_t57-e06_harmful.json
 measure "$ABL/candidates/t57-e06" t57e06x xstest_safe reports/overnight_t57-e06_xstest.json
 measure "$ABL/candidates/t57-e10" t57e10 harmful reports/overnight_t57-e10_harmful.json
