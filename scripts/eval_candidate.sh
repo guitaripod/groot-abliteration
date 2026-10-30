@@ -23,7 +23,8 @@ docker run -d --name vllm-cand --device nvidia.com/gpu=all --ipc=host --user 100
   -p 127.0.0.1:${PORT}:8000 \
   vllm/vllm-openai:nightly-3f1bcfd82bb2e93fcd364fc7a5491718453a77e2 \
   "$CONTAINER_DIR" --served-model-name "$SERVED" --max-model-len 32768 \
-  --gpu-memory-utilization ${UTIL:-0.25} --max-num-seqs 8 --quantization fp8 > /dev/null 2>&1
+  --gpu-memory-utilization ${UTIL:-0.25} --max-num-seqs 8 \
+  ${QUANT:+--quantization "$QUANT"} > /dev/null 2>&1
 
 ready=0
 for _ in $(seq 1 60); do

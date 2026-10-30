@@ -113,7 +113,7 @@ def main() -> None:
         "experts": trial.get("experts", "–"),
         "shared": trial.get("shared", "–"),
         "judge": "pennyroyal (Qwen 3.8 27B, local vLLM)",
-        "eval_harmful": 120,
+        "eval_harmful": (verified or {}).get("n", 120),
         "xstest": 225,
         "string_rate": verified.get("string_refusal_rate", 0.0),
         "rows": rows,

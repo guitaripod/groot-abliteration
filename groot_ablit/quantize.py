@@ -21,7 +21,7 @@ REFERENCE = os.environ.get(
     "/mnt/nvme8tb/hf/hub/models--GrootTeam--Groot-19B-A3B-261023-NVFP4/snapshots/"
     "8ff73aca9300f4e9835972f0012ef5edbb016a8b/config.json",
 )
-CALIBRATION_DATASET = os.environ.get("CALIBRATION_DATASET", "open_platypus")
+CALIBRATION_DATASET = os.environ.get("CALIBRATION_DATASET", "tatsu-lab/alpaca")
 CALIBRATION_SAMPLES = int(os.environ.get("CALIBRATION_SAMPLES", "512"))
 MAX_SEQUENCE_LENGTH = int(os.environ.get("CALIBRATION_MAX_LEN", "2048"))
 

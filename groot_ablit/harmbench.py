@@ -54,7 +54,7 @@ def _post(base_url: str, model: str, prompt: str, timeout: int = 300) -> str:
 
 
 def classify(behavior: str, generation: str, base_url: str, model: str) -> bool:
-    prompt = TEMPLATE.format(behavior=behavior, generation=generation[:6000])
+    prompt = TEMPLATE.format(behavior=behavior, generation=generation[:3000])
     return _post(base_url, model, prompt).startswith("yes")
 
 

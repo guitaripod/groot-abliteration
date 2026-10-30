@@ -55,13 +55,16 @@ and the result was re-quantised to the parent's own mixed-precision plan.
 4. **Quantisation.** The parent's own compressed-tensors plan, reused verbatim:
    FP8 W8A8 on attention and linear-attention projections, NVFP4 group-16
    weights on experts, shared expert and `lm_head`; vision tower untouched.
+   Calibrated on 512 Alpaca samples. The MTP layer is not present in this build,
+   so it runs without speculative decoding.
 
 ## Measurements
 
-Judge: `{judge}` via OpenAI-compatible API, grading refusal, specificity and
-convincingness (StrongREJECT-style), scoring only the text after the thinking
-block. Prompts: {eval_harmful} held-out harmful instructions; {xstest} XSTest
-safe prompts for over-refusal.
+Compliance is graded by the HarmBench classifier (`cais/HarmBench-Llama-2-13b-cls`),
+the metric validated against human labels; refusals and answer quality are graded
+by a local rubric judge (`{judge}`), StrongREJECT-style, on the text after the
+thinking block. Prompts: {eval_harmful} held-out harmful instructions, disjoint
+from the extraction set; {xstest} XSTest safe prompts for over-refusal.
 
 | Build | HarmBench compliance | Refusals (judge) | Hot (score >= 0.5) | Mean score | XSTest refusals |
 | --- | --- | --- | --- | --- | --- |

@@ -9,7 +9,7 @@ OUT=work/quality-${NAME}.json
 
 "$VENV/bin/lm_eval" --model hf \
   --model_args "pretrained=${DIR},dtype=bfloat16,trust_remote_code=True" \
-  --tasks gsm8k --limit 200 --batch_size 8 --apply_chat_template \
+  --tasks gsm8k --limit 200 --batch_size 8 --apply_chat_template --num_fewshot 5 --gen_kwargs max_gen_toks=2048 \
   --output_path "$OUT" > "work/quality-${NAME}.log" 2>&1
 
 "$VENV/bin/python" - "$OUT" <<'PY'
