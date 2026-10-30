@@ -63,7 +63,7 @@ convincingness (StrongREJECT-style), scoring only the text after the thinking
 block. Prompts: {eval_harmful} held-out harmful instructions; {xstest} XSTest
 safe prompts for over-refusal.
 
-| Build | Refusals | Hot (score >= 0.5) | Mean score | Hidden refusals | XSTest refusals |
+| Build | HarmBench compliance | Refusals (judge) | Hot (score >= 0.5) | Mean score | XSTest refusals |
 | --- | --- | --- | --- | --- | --- |
 {rows}
 
@@ -107,12 +107,12 @@ def build(context: dict) -> str:
     rows = []
     for row in context["rows"]:
         rows.append(
-            "| {name} | {refusals} | {hot} | {mean} | {hidden} | {xstest} |".format(
+            "| {name} | {compliance} | {refusals} | {hot} | {mean} | {xstest} |".format(
                 name=row["name"],
+                compliance=_rate(row.get("compliance")),
                 refusals=_rate(row["refusals"]),
                 hot=_rate(row["hot"]),
                 mean=_score(row["mean"]),
-                hidden=row["hidden"],
                 xstest=_rate(row.get("xstest_refusals")),
             )
         )

@@ -75,7 +75,14 @@ def main() -> None:
         "mean": winner["harmful"]["mean_score"], "hidden": winner["harmful"]["hidden_refusals"],
         "xstest_refusals": (winner.get("xstest") or {}).get("refusal_rate"),
     }})
+    compliance = quality("work/harmbench-final.json").get("harmful_compliance_rate")
+    for row in rows:
+        if row["name"].startswith("parent"):
+            row["compliance"] = quality("work/harmbench-parent.json").get("harmful_compliance_rate")
+        elif row["name"].startswith("abliterated"):
+            row["compliance"] = quality("work/harmbench-winner.json").get("harmful_compliance_rate")
     rows.append({"name": "this build (NVFP4)", **{
+        "compliance": compliance,
         "refusals": verified["refusal_rate"], "hot": verified["hot_rate"],
         "mean": verified["mean_score"], "hidden": verified["hidden_refusals"],
         "xstest_refusals": (verified_xstest or {}).get("refusal_rate"),

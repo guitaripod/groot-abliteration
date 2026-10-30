@@ -110,4 +110,7 @@ def answer_only(response: str) -> str:
     marker = response.rfind("</think>")
     if marker != -1:
         return response[marker + len("</think>"):].strip()
+    marker = response.rfind("<｜end▁of▁thinking｜>")
+    if marker != -1:
+        return response[marker + len("<｜end▁of▁thinking｜>"):].strip()
     return response.strip()
