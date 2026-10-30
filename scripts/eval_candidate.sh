@@ -10,6 +10,9 @@ REPORT=${3:?}
 PORT=${PORT:-17800}
 MAX_NEW=${MAX_NEW:-2048}
 
+CONTAINER_DIR=${MODEL_DIR/\/mnt\/nvme8tb\/hf-ablate//ablate}
+CONTAINER_DIR=${CONTAINER_DIR/\/mnt\/nvme8tb\/hf//hf}
+
 docker rm -f vllm-cand >/dev/null 2>&1 || true
 docker run -d --name vllm-cand --device nvidia.com/gpu=all --ipc=host --user 1000:1000 \
   --memory=64g --memory-swap=64g \
@@ -19,8 +22,8 @@ docker run -d --name vllm-cand --device nvidia.com/gpu=all --ipc=host --user 100
   -v /mnt/nvme8tb/hf:/hf -v /mnt/nvme8tb/hf-ablate:/ablate -v /mnt/nvme8tb/vllm-cache:/cache \
   -p 127.0.0.1:${PORT}:8000 \
   vllm/vllm-openai:nightly-3f1bcfd82bb2e93fcd364fc7a5491718453a77e2 \
-  "$MODEL_DIR" --served-model-name "$SERVED" --max-model-len 32768 \
-  --gpu-memory-utilization ${UTIL:-0.28} --max-num-seqs 8 --quantization fp8 > /dev/null 2>&1
+  "$CONTAINER_DIR" --served-model-name "$SERVED" --max-model-len 32768 \
+  --gpu-memory-utilization ${UTIL:-0.25} --max-num-seqs 8 --quantization fp8 > /dev/null 2>&1
 
 ready=0
 for _ in $(seq 1 60); do

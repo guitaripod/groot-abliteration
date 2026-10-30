@@ -50,8 +50,12 @@ build_variant() {
 
 measure() {
   local dir=$1 served=$2 kind=$3 report=$4
+  if [ -f "$report" ]; then
+    echo "-- $served ($kind) already measured"
+    note "measure-$served-$kind" ok
+    return 0
+  fi
   echo "-- measuring $served ($kind)"
-  ./scripts/free_gpu.sh
   KIND="$kind" MAX_NEW=1536 ./scripts/eval_candidate.sh "$dir" "$served" "$report"
   if [ ! -f "$report" ]; then
     echo "-- retry $served ($kind) after a server failure"
@@ -60,7 +64,7 @@ measure() {
     KIND="$kind" MAX_NEW=1536 ./scripts/eval_candidate.sh "$dir" "$served" "$report"
   fi
   note "measure-$served-$kind" "$([ -f "$report" ] && echo ok || echo failed)"
-  ./scripts/free_gpu.sh
+  [ -f "$report" ] && ./scripts/free_gpu.sh
   "$VENV/bin/python" -m groot_ablit.cli score --report "$report" \
     --judge-url http://127.0.0.1:8081/v1 --judge-model pennyroyal
   note "score-$served-$kind" "$([ -f "$report" ] && echo ok || echo failed)"
